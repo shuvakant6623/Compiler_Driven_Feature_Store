@@ -183,9 +183,164 @@ Step-by-step.
 
 ---
 
-## 📌 Final Thought
+### 1. Why Compilers Exist
 
-> “There is no wizardry in compilers.  
-> Just structured thinking and careful implementation.”
+A compiler is not just a translator. It is a **verification system** that ensures correctness *before execution*.
+
+It prevents:
+
+* Invalid structure (syntax errors)
+* Invalid meaning (semantic errors)
+* Some classes of unsafe behavior
+
+👉 Key realization:
+
+> A compiler reduces uncertainty before runtime.
 
 ---
+
+### 2. Syntax vs Semantic Errors
+
+#### 🔴 Syntax Errors
+
+* Violations of grammar rules
+* Prevent AST formation
+
+**Example (DSL):**
+
+```
+feature user_spend from transactions
+  window 30d
+  aggregation: sum
+```
+
+❌ Missing ':' → cannot parse
+
+---
+
+#### 🔵 Semantic Errors
+
+* Structure is valid, but meaning is invalid
+* AST exists but fails during analysis
+
+**Example (DSL):**
+
+```
+feature user_spend from transactions
+  window: 30d
+  aggregation: sum
+```
+
+❌ Sum of what column?
+
+---
+
+### 3. Why This Project Exists
+
+This project is not just about building a DSL.
+It is about building a **compiler that guarantees correctness of ML features before execution**.
+
+Traditional systems fail because:
+
+* Errors are detected at runtime
+* Silent data issues corrupt models
+* Training-serving skew goes unnoticed
+
+👉 Goal of this system:
+
+> Catch all critical errors at compile time
+
+---
+
+### 4. The 3 Layers of Errors (Core Mental Model)
+
+#### 🧩 Layer 1 — Syntax
+
+* Grammar correctness
+* Token validity
+* Structural rules
+
+#### 🧠 Layer 2 — Semantic
+
+* Logical correctness
+* Type correctness
+* Reference resolution
+
+#### 🌍 Layer 3 — Domain
+
+* Feature store correctness
+* ML system guarantees
+* Time & data consistency
+
+---
+
+## 🚨 12+ Errors Your Compiler MUST Catch
+
+### 🔴 Syntax Errors
+
+1. Misspelled keywords (`windw` instead of `window`)
+2. Missing `:` in key-value pairs
+3. Invalid duration format (`30 d`)
+4. Wrong indentation / block structure
+5. Unknown fields (`windows` instead of `window`)
+
+---
+
+### 🔵 Semantic Errors
+
+6. Undefined data source (`transactions` not registered)
+7. Missing aggregation column (`sum` of what?)
+8. Invalid aggregation for data type
+9. Ambiguous column selection
+10. Missing or unresolved feature type
+11. Window defined without time column reference
+
+---
+
+### 🌍 Domain Errors
+
+12. Undefined time reference (event vs ingestion vs request time)
+13. Missing entity key (user? account?)
+14. Training-serving skew risk
+15. Missing timestamp in source data
+16. Late data handling undefined
+17. Null handling not specified
+18. Timezone ambiguity
+
+---
+
+## 🎯 Key Mental Shift
+
+From:
+
+> "Will this code run?"
+
+To:
+
+> "Can this system guarantee correctness before execution?"
+
+---
+
+## 🚀 Next Step
+
+Design a **correct and unambiguous DSL version** of:
+
+```
+feature user_spend from transactions
+  window: 30d
+  aggregation: sum
+```
+
+👉 Add:
+
+* Explicit column
+* Entity key
+* Time reference
+* Clear semantics
+
+---
+
+## 🧠 Final Insight
+
+> A compiler is not a code translator.
+> It is a system that enforces truth before execution.
