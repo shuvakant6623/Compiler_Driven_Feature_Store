@@ -2,158 +2,166 @@
 
 ## Introduction
 
-This README is my understanding after reading the introduction of *Crafting Interpreters*.
+This README is basically my understanding after reading the introduction of *Crafting Interpreters* and thinking through it myself.
 
-Initially, I used to think compilers and interpreters are something very complex or “magical”.  
-But now I realize:
+Earlier, I used to feel like compilers/interpreters are some kind of magic thing that only hardcore systems people understand.
 
-> There is no magic. It’s just code, broken into small understandable steps.
+But now I think:
 
----
-
-## Why Learn Compilers?
-
-From what I understood:
-
-- Most people think building a programming language is rare and only experts do it
-- But in reality, **small languages (DSLs)** are everywhere:
-  - Config files
-  - Template engines
-  - Query languages
-  - Scripting systems
-
-So learning compilers is not useless — it is actually **very practical**
+> There is no magic. It’s just a bunch of small steps done properly.
 
 ---
 
-## Key Mindset Shift
+## Why I Think Learning Compilers Matters
 
-Earlier thinking ❌:
-- Compiler = Magic
-- Only geniuses can build it
+At first I thought:
+- “Why would I ever build a compiler?”
+- “This is probably useless unless I make a programming language”
 
-Now thinking ✅:
-- Compiler = Set of transformations
-- Anyone can build it by learning step-by-step
+But now I feel like that thinking was wrong.
+
+Because small “languages” are literally everywhere:
+- Config files
+- Query systems
+- Feature definitions (this is important for my project)
+- Even APIs sometimes behave like DSLs
+
+So yeah, compilers are not rare — they’re just hidden.
 
 ---
 
-## How a Compiler Actually Works (My Mental Model)
+## My Mindset Shift
 
-A compiler doesn’t directly understand code.
+Before ❌:
+- Compiler = very hard / magical
+- Only geniuses build it
 
-It processes code in stages:
+Now ✅:
+- Compiler = pipeline of transformations
+- If I break it, I can build it
+
+---
+
+## How I Currently Think a Compiler Works
+
+Right now, my mental model is something like:
 
 ```
 Code → Tokens → Structure → Meaning → Execution
 ```
 
+Not 100% perfect, but this is how I visualize it.
 
-Breaking it down:
+---
 
 ### 1. Tokenization
-- Break code into small pieces
-- Example:
+
+I think of this as:
+- Breaking code into small pieces
+
+Example:
 ```
 int x = 10;
 ```
+
 becomes:
 ```
 int | x | = | 10 | ;
 ```
 
+Simple but important.
+
 ---
 
 ### 2. Parsing
-- Convert tokens into a structure (tree)
-- This is where code gets “shape”
+
+Here the compiler gives “shape” to the code.
+
+- Tokens → Tree (AST)
+- Now code is structured
 
 ---
 
 ### 3. Understanding (Semantics)
-- Check if code makes sense:
-- Types
-- Variables
-- Scope
+
+This part I feel is where things get interesting:
+
+- Does the code actually make sense?
+- Are types correct?
+- Are variables defined?
 
 ---
 
 ### 4. Execution / Translation
-- Either:
-- Run directly (Interpreter)
-- Convert to machine code (Compiler)
+
+Finally:
+- Either run directly (interpreter)
+- Or convert to machine code (compiler)
 
 ---
 
-## Interpreter vs Compiler (What I Understood)
+## Interpreter vs Compiler (My Understanding)
 
 | Interpreter | Compiler |
 |------------|--------|
-| Executes code step-by-step | Translates whole code first |
-| Easier to build | Faster execution |
+| Runs step by step | Translates everything first |
+| Easier to build (I think) | More optimized |
 | Example: Python | Example: C++ |
 
 ---
 
-## Important Insight
+## One Important Thing I Realized
 
-The book emphasizes:
+> You don’t learn compilers by reading… you learn by building.
 
-> You learn compilers by building them, not by just reading theory.
-
-This is very important.
-
-- Theory alone is confusing
-- Implementation builds real understanding
+Theory alone = confusing  
+Implementation = clarity
 
 ---
 
-## Skills You Build
+## Skills I Think This Builds
 
-While building a compiler, you learn:
+While learning this, I feel like I'm also improving in:
 
 - Recursion
-- Trees & Graphs
-- Data structures
-- Memory handling
-- System-level thinking
+- Trees
+- Problem decomposition
+- System thinking
 
-So it’s like **full brain training for a programmer**
-
----
-
-## Two Approaches (From the Book)
-
-The book teaches:
-
-### 1. High-Level Interpreter (Java)
-- Focus on understanding
-- Simple and clean
-- Uses existing runtime
-
-### 2. Low-Level Interpreter + Compiler (C)
-- Focus on performance
-- Build everything from scratch:
-- Memory
-- Data structures
-- Bytecode
+So it’s not just “compiler”, it’s like full brain training.
 
 ---
 
-## Biggest Takeaway
+## Two Ways to Learn (From What I Read)
 
-What I understood most clearly:
+### 1. High-Level (Java style)
+- Easier to understand
+- Less control
 
-> Compilers are not hard because of complexity,  
-> they feel hard because they involve many small parts together.
+### 2. Low-Level (C style)
+- Harder
+- But full control (memory, bytecode, etc.)
 
-If we break them down:
-- Each part is simple
-- Together they form a powerful system
+---
+
+## My Biggest Takeaway So Far
+
+I think compilers feel hard because:
+
+> They are many simple things combined together.
+
+Individually:
+- Tokenization = easy  
+- Parsing = manageable  
+- Semantic checks = logical  
+
+Together:
+- Feels complex
 
 ---
 
 ## My Current Mental Model
+
 ```
 Input Code
 ↓
@@ -166,164 +174,155 @@ Semantic Checks
 Execution / Machine Code
 ```
 
----
-
-## My Learning Approach (Going Forward)
-
-Based on this:
-
-- I will not treat compilers as theory
-- I will build:
-  - Lexer
-  - Parser
-  - AST
-  - Execution engine
-
-Step-by-step.
+Still refining this as I learn.
 
 ---
 
-### 1. Why Compilers Exist
+## My Plan Going Forward
 
-A compiler is not just a translator. It is a **verification system** that ensures correctness *before execution*.
+Instead of just reading, I want to build:
 
-It prevents:
+- Lexer
+- Parser
+- AST
+- Execution engine
 
-* Invalid structure (syntax errors)
-* Invalid meaning (semantic errors)
-* Some classes of unsafe behavior
-
-👉 Key realization:
-
-> A compiler reduces uncertainty before runtime.
+Step-by-step, not rushing.
 
 ---
 
-### 2. Syntax vs Semantic Errors
+## Why Compilers Exist (My Understanding)
 
-#### 🔴 Syntax Errors
+I think a compiler is not just a translator.
 
-* Violations of grammar rules
-* Prevent AST formation
+It’s more like:
 
-**Example (DSL):**
+> A system that catches problems before execution.
 
+It reduces uncertainty.
+
+---
+
+## Syntax vs Semantic Errors (My View)
+
+### 🔴 Syntax Errors
+
+- Grammar problems
+- Code structure is wrong
+
+Example:
 ```
 feature user_spend from transactions
   window 30d
   aggregation: sum
 ```
 
-❌ Missing ':' → cannot parse
-
----
-
-#### 🔵 Semantic Errors
-
-* Structure is valid, but meaning is invalid
-* AST exists but fails during analysis
-
-**Example (DSL):**
-
-```
-feature user_spend from transactions
-  window: 30d
-  aggregation: sum
-```
-
-❌ Sum of what column?
-
----
-
-### 3. Why This Project Exists
-
-This project is not just about building a DSL.
-It is about building a **compiler that guarantees correctness of ML features before execution**.
-
-Traditional systems fail because:
-
-* Errors are detected at runtime
-* Silent data issues corrupt models
-* Training-serving skew goes unnoticed
-
-👉 Goal of this system:
-
-> Catch all critical errors at compile time
-
----
-
-### 4. The 3 Layers of Errors (Core Mental Model)
-
-#### 🧩 Layer 1 — Syntax
-
-* Grammar correctness
-* Token validity
-* Structural rules
-
-#### 🧠 Layer 2 — Semantic
-
-* Logical correctness
-* Type correctness
-* Reference resolution
-
-#### 🌍 Layer 3 — Domain
-
-* Feature store correctness
-* ML system guarantees
-* Time & data consistency
-
----
-
-## 🚨 12+ Errors Your Compiler MUST Catch
-
-### 🔴 Syntax Errors
-
-1. Misspelled keywords (`windw` instead of `window`)
-2. Missing `:` in key-value pairs
-3. Invalid duration format (`30 d`)
-4. Wrong indentation / block structure
-5. Unknown fields (`windows` instead of `window`)
+I think this fails because `:` is missing.
 
 ---
 
 ### 🔵 Semantic Errors
 
-6. Undefined data source (`transactions` not registered)
-7. Missing aggregation column (`sum` of what?)
-8. Invalid aggregation for data type
-9. Ambiguous column selection
-10. Missing or unresolved feature type
-11. Window defined without time column reference
+- Structure is valid
+- But meaning is unclear
+
+Example:
+```
+feature user_spend from transactions
+  window: 30d
+  aggregation: sum
+```
+
+This looks correct, but I feel like:
+→ “sum of what?”
 
 ---
 
-### 🌍 Domain Errors
+## Why I’m Building This Project
 
-12. Undefined time reference (event vs ingestion vs request time)
-13. Missing entity key (user? account?)
-14. Training-serving skew risk
-15. Missing timestamp in source data
-16. Late data handling undefined
-17. Null handling not specified
-18. Timezone ambiguity
+This is not just about a DSL.
 
----
+What I actually want is:
 
-## 🎯 Key Mental Shift
+> A system that guarantees ML feature correctness before execution
 
-From:
-
-> "Will this code run?"
-
-To:
-
-> "Can this system guarantee correctness before execution?"
+Because current systems:
+- Fail at runtime
+- Have silent bugs
+- Cause training-serving mismatch
 
 ---
 
-## 🚀 Next Step
+## My Mental Model of Errors (3 Layers)
 
-Design a **correct and unambiguous DSL version** of:
+### 🧩 Syntax Layer
+- Grammar
+- Structure
+
+### 🧠 Semantic Layer
+- Logic
+- Types
+- References
+
+### 🌍 Domain Layer
+- ML correctness
+- Time consistency
+- Data validity
+
+---
+
+## 🚨 Errors I Think Should Be Caught
+
+(Not final, but this is what I think should be included)
+
+### 🔴 Syntax
+
+- Misspelled keywords (like `windw`)
+- Missing `:`
+- Wrong duration format
+- Bad structure / indentation
+- Unknown fields
+
+---
+
+### 🔵 Semantic
+
+- Undefined data source
+- Aggregation without column (this one feels important)
+- Invalid aggregation type
+- Ambiguous column usage
+- Missing feature type
+- Window without time reference
+
+---
+
+### 🌍 Domain
+
+- Time not defined properly (event vs ingestion etc.)
+- Missing entity (user/account)
+- Possible training-serving skew
+- No timestamp in data
+- Late data handling unclear
+- Null handling missing
+- Timezone confusion
+
+---
+
+## Big Mental Shift
+
+Earlier I used to think:
+
+> “Will this run?”
+
+Now I’m trying to think:
+
+> “Can this be guaranteed correct before running?”
+
+---
+
+## Next Step (What I Want to Improve)
+
+Take this:
 
 ```
 feature user_spend from transactions
@@ -331,16 +330,16 @@ feature user_spend from transactions
   aggregation: sum
 ```
 
-👉 Add:
-
-* Explicit column
-* Entity key
-* Time reference
-* Clear semantics
+And make it:
+- Explicit
+- Unambiguous
+- Fully defined
 
 ---
 
-## 🧠 Final Insight
+## Final Thought
 
-> A compiler is not a code translator.
-> It is a system that enforces truth before execution.
+I think the biggest realization for me is:
+
+> A compiler is not just translating code  
+> It is enforcing correctness before execution
