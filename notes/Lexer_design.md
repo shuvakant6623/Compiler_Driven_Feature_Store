@@ -1,4 +1,4 @@
-# Day 02 — Lexer Design Notes
+# Lexer Design Notes
 
 ## Complete Token Type List
 
