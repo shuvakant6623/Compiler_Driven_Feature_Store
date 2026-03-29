@@ -61,12 +61,12 @@ I think of this as:
 
 Example:
 ```
-int x = 10;
+int x = 20;
 ```
 
 becomes:
 ```
-int | x | = | 10 | ;
+int | x | = | 20 | ;
 ```
 
 Simple but important.
