@@ -119,10 +119,18 @@ FeatureProgram
 If I extend it:
 ```
 FeatureProgram
-└── Feature: user_spend
-└── Aggregation: sum
-└── Filter: last_30_days
-└── Source: transactions
+└── Feature(user_spend)
+    ├── name: user_spend
+    ├── source: transactions
+    ├── Window
+    │   └── duration: 30d
+    ├── Aggregation
+    │   └── operation: sum
+    └── Filter
+        └── Expression
+            ├── left: IDENTIFIER(amount)
+            ├── operator: COMP_OP(>)
+            └── right: INTEGER(100)
 ```
 
 Now the structure is:
