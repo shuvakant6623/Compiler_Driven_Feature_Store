@@ -1,31 +1,9 @@
-# Semantic Analyzer Notes (my understanding)
+# Semantic Analyzer Notes (my own understanding)
 
-## 1) What semantic analyzer does
-Parser checks syntax.  
-Semantic analyzer checks if the DSL actually makes sense.
+## Visitor Pattern — Traversal Order
+I understand Visitor like this: analyzer walks AST node by node and checks meaning at each step.
 
-It validates things like:
-- source exists or not
-- target column exists or not
-- aggregation is valid for that type or not
-- required fields are present
-- feature-to-feature references are valid
-
-So simple way:  
-**parser = grammar check**  
-**semantic analyzer = meaning check**
-
----
-
-## 2) Visitor pattern (how it walks AST)
-Analyzer visits nodes one by one and runs checks at each node.
-
-Typical order I think:
-1. Program
-2. Each feature
-3. Inside feature: source -> window -> aggregation -> target
-
-Traversal idea:
+For my DSL, traversal order looks like:
 
 ```text
 Program
@@ -45,132 +23,151 @@ Program
      └─ Aggregation(avg)
 ```
 
+So simple flow is:
+1. visit Program
+2. visit each Feature
+3. visit child nodes (source, window, aggregation, target, filter)
+4. collect errors while walking
+
 ---
 
-## 3) Symbol table design
+## Symbol Table Design
+This is a lookup map the analyzer uses for names and types.
 
-### What it stores
-- data sources and their columns/types
-- features and their output types
-- aggregation rules (what input type is allowed)
-- optional dependency info
+It stores:
+- raw sources and column types
+- feature definitions and output types
+- aggregation rules
+- feature dependencies
 
-### Structure (simple)
+Structure with real DSL values:
+
 ```text
 GlobalSymbolTable
 ├─ Sources
 │  └─ transactions
 │     ├─ amount: number
-│     └─ ...
+│     ├─ user_id: string
+│     ├─ merchant_id: string
+│     └─ ts: timestamp
 ├─ Features
-│  ├─ user_spend -> number
-│  ├─ merchant_count -> integer
-│  └─ fraud_score -> number
-└─ Aggregations
+│  ├─ user_spend
+│  │  ├─ source: transactions
+│  │  ├─ window: 30d
+│  │  ├─ aggregation: sum
+│  │  ├─ target: amount
+│  │  └─ output_type: number
+│  ├─ merchant_count
+│  │  ├─ source: transactions
+│  │  ├─ window: 7d
+│  │  ├─ aggregation: count
+│  │  ├─ target: amount
+│  │  └─ output_type: integer
+│  └─ fraud_score
+│     ├─ source: user_spend
+│     ├─ window: 7d
+│     ├─ aggregation: avg
+│     └─ output_type: number
+└─ AggregationRules
    ├─ sum(number) -> number
    ├─ avg(number) -> number
    └─ count(any) -> integer
 ```
 
-### Why needed
-Without symbol table, analyzer cannot resolve names and types properly.
-It is needed for:
-- resolving `from transactions`
-- checking `target amount`
-- resolving derived feature source like `from user_spend`
-- validating aggregation type compatibility
+---
+
+## Schema Registry
+Problem: analyzer needs schema at compile time, but real data schema is in external DB.
+
+### 1) Manual registration
+User defines schema manually.
+- pros: simple, no DB dependency
+- cons: can become stale if DB changes
+
+### 2) Automatic inference
+System connects to DB and pulls schema.
+- pros: accurate and updated
+- cons: needs DB access during compile/validation
+
+### 3) Hybrid (production choice)
+Use both:
+- auto-infer when DB is reachable
+- manual schema as fallback
+- drift detection for stale manual definitions
+
+This is most practical in real systems.
 
 ---
 
-## 4) Validation checks (complete list)
+## Validation Checks Per Node
 
-### Program level
-- duplicate feature names
-- build dependency graph between features
-- detect circular dependencies
-- ensure validation order is correct (topological order)
+### Feature node checks
+- feature name exists and is unique
+- source exists (raw source or feature)
+- required fields are present
+- invalid combinations are rejected
+- if source is feature, dependency edge is added
 
-### Feature level
-- feature name valid and unique
-- source is present
-- required properties exist
-- illegal combinations rejected
-
-### Source check
-- source exists as raw table OR existing feature
-- if feature source, upstream feature should be valid
-
-### Window check
-- format valid (7d, 24h etc.)
+### Window node checks
+- format valid (like `7d`, `24h`)
 - value > 0
 - allowed unit only
+- optional rule checks against upstream window
 
-### Aggregation check
+### Aggregation node checks
 - aggregation keyword supported
-- valid for input type
-- valid for source kind (raw/derived based on DSL rules)
+- input type compatible
+- output type inferred correctly
+- allowed for raw/derived source as per DSL rule
 
-### Target check
-- for raw source: target column required (for sum/avg etc.)
-- target column must exist
-- target type must match aggregation
-- for derived source: target behavior should follow DSL policy (usually not raw column-based)
-
----
-
-## 5) Cross-node dependencies
-
-Main dependencies:
-- Aggregation -> Target type
-- Target -> Source schema
-- Source kind (raw/derived) -> allowed fields
-- Upstream feature output type -> downstream aggregation validity
-- Feature dependencies -> validation order
-- Upstream validity -> downstream validity
-
-Also yes, possible policy dependency:
-- Aggregation -> Window
+### Filter node checks
+- field/column exists
+- operator valid for type
+- literal value type matches field type
+- on derived source, only available output bindings can be used
 
 ---
 
-## 6) derived feature validation
+## Derived Feature Checks
+For derived feature like:
 
-Given:
 - `user_spend` from `transactions`
-- `fraud_score` from `user_spend` (derived feature)
+- `fraud_score` from `user_spend`
 
-New checks needed for `fraud_score` (not needed in basic raw feature case):
+Extra checks needed:
 
-1. `user_spend` must exist as a feature symbol  
-2. add dependency edge `fraud_score -> user_spend`  
-3. detect cycles in feature graph  
-4. validate in topological order  
-5. if upstream invalid, downstream should fail too  
-6. use upstream output type as input for `avg`  
-7. enforce rule for aggregation over derived feature output  
-8. window compatibility rule between upstream and downstream  
-9. lineage tracking (`fraud_score -> user_spend -> transactions`)  
-10. better error messages with upstream context
+### Forward reference problem
+If `fraud_score` appears before `user_spend`, analyzer still must resolve it.
+Need two-pass resolution or dependency graph with topological order.
+
+### Window inconsistency
+Need rule for upstream vs downstream window compatibility.
+Without this, re-windowing semantics can become ambiguous.
+
+### Output binding vs column name
+Derived source is feature output, not raw table columns.
+Analyzer must bind to upstream output contract, not assume raw column access.
+
+Also needed in practice:
+- cycle detection in feature graph
+- upstream invalid -> downstream invalid propagation
+- clear lineage tracking (`fraud_score -> user_spend -> transactions`)
 
 ---
 
-## 7) Schema registry design (compile-time types)
+## Explicit Override Pattern
+Default should be strict validation.
+But sometimes business exceptions are real.
 
-### Problem
-Analyzer needs column types at compile time, but real schema is in external DB.
+### When to use
+- temporary migration
+- known exception case
+- backward compatibility
 
-### Approaches
+### How to use
+- require explicit override flag/annotation
+- emit warning when override is used
+- keep override local and intentional
+- never make relaxed behavior default
 
-1. **Manual registration**  
-   User writes schema in config/DSL.  
-   Easy to start, but can become stale if DB changes.
-
-2. **Automatic inference**  
-   System connects to DB and fetches schema automatically.  
-   Requires DB access at compile time.
-
-### Production choice (hybrid)
-Best practical choice is hybrid:
-- auto-infer when DB is accessible
-- manual schema declaration as fallback
-- drift detection to catch stale manual schema
+So my rule: **strict by default, override only explicitly.**
