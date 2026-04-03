@@ -9,10 +9,10 @@ enum TokenType {
     PropertyKeyword(String),
     AggregationKeyword(String),
     ConnectorKeyword(String),
-    Duration(String),
+    Duration(i64, TimeUnit),
     Identifier(String),
     Integer(i64),
-    ComparisionOperator(String),
+    ComparisonOperator(String),
     MathOperator(char),
     Separator(char),
     LParen(char),
@@ -20,6 +20,17 @@ enum TokenType {
     Float(f64),
     Error(String),
     EOF,
+}
+
+enum TimeUnit {
+    Milliseconds,
+    Seconds,
+    Minutes,
+    Hours,
+    Days,
+    Weeks,
+    Months,
+    Years,
 }
 
 struct Lexer {
@@ -30,6 +41,16 @@ struct Lexer {
     peek_position: usize,
 }
 
+pub fn read_identifier(input: String) -> Vec<Token> {
+    let mut lexer = Lexer::new(input);
+    lexer.tokenize()
+}
+
+pub fn read_number(input: String) -> Vec<Token> {
+    let mut lexer = Lexer::new(input);
+    lexer.tokenize()
+}
+
 impl Lexer {
     fn new(input: String) -> Self {
         Lexer {
@@ -37,39 +58,49 @@ impl Lexer {
             position: 0,
             line: 1,
             tokens: Vec::new(),
-            if input.len() > 1 {
-                peek_position: 1
-            } else { 
-                peek_position: 0,
-            }
+            peek_position: if input.len() > 1 { 1 } else { 0 },
         }
     }
 
-    fn tokenize(&mut self) {
+    fn tokenize(&mut self) -> Vec<Token> {
+        let mut tokens: Vec<Token> = Vec::new();
         while self.position < self.input.len() {
             let current_char = self.input.chars().nth(self.position).unwrap();
-            if current_cahr == '\n' {
+            if current_char == '\n' {
                 self.line += 1;
-                self.position += 1;;
+                self.position += 1;
             } else if current_char.is_whitespace() {
                 self.position += 1;
-            } else if current_char.isalphabetic() {
+            } else if current_char.is_alphabetic() {
                 let identifier = self.read_identifier();
                 let token_type = self.lookup_keyword(&identifier);
-                self.tokens.push(Token {
+                tokens.push(Token {
                     token_type,
                     value: identifier,
                     line: self.line,
                 });
-            } else if current_char.is_digit(10) {
+            } else if current_char.is_ascii_digit() {
                 let number = self.read_number();
-                self.tokens.push(Token {
+                tokens.push(Token {
                     token_type: TokenType::Integer(number),
                     value: number.to_string(),
                     line: self.line,
                 });
+            } else if ":".contains(current_char) {
+                tokens.push(Token {
+                    token_type : TokenType::Separator(current_char),
+                    value: current_char.to_string(),
+                    line: self.line,
+                });
+            } else if ">,<,=,<=, >=, <<, >>, <<=, >>=, !=".contains(current_char) {
+                let operator = self.read_comparision_operator();
+                tokens.push(Token {
+                    token_type : TokenType::ComparisonOperator(operator.clone()),
+                    value: operator,
+                    line: self.line,
+                });
             } else {
-                self.tokens.push(Token {
+                tokens.push(Token {
                     token_type: TokenType::Error(format!("Unexpected character: {}", current_char)),
                     value: current_char.to_string(),
                     line: self.line,
@@ -77,5 +108,6 @@ impl Lexer {
                 self.position += 1;
             }
         }
+        tokens
     }
 }
