@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
-struct Token {
+pub struct Token {
     token_type: TokenType,
     value: String,
     line: usize,
 }
 
 #[derive(Clone, Debug)]
-enum TokenType {
+pub enum TokenType {
     Keyword(Keyword),
     Duration(i64, TimeUnit),
     Identifier(String),
@@ -24,7 +24,7 @@ enum TokenType {
 }
 
 #[derive(Clone, Debug)]
-enum Keyword {
+pub enum Keyword {
     Structural,
     Property,
     Aggregation,
@@ -32,7 +32,7 @@ enum Keyword {
 }
 
 #[derive(Clone, Debug)]
-enum TimeUnit {
+pub enum TimeUnit {
     Milliseconds,
     Seconds,
     Minutes,
@@ -43,7 +43,7 @@ enum TimeUnit {
     Years,
 }
 
-fn unit_to_str(u: &TimeUnit) -> &'static str {
+pub fn unit_to_str(u: &TimeUnit) -> &'static str {
     match u {
         TimeUnit::Milliseconds => "ms",
         TimeUnit::Seconds => "s",
@@ -56,7 +56,7 @@ fn unit_to_str(u: &TimeUnit) -> &'static str {
     }
 }
 
-struct Lexer {
+pub struct Lexer {
     input: Vec<char>,
     position: usize,
     line: usize,
@@ -64,7 +64,7 @@ struct Lexer {
 }
 
 impl Lexer {
-    fn new(input: String) -> Self {
+    pub fn new(input: String) -> Self {
         let chars: Vec<char> = input.chars().collect();
         Lexer {
             input: chars,
@@ -74,7 +74,7 @@ impl Lexer {
         }
     }
 
-    fn build_keyword_map() -> HashMap<&'static str, Keyword> {
+    pub fn build_keyword_map() -> HashMap<&'static str, Keyword> {
         let mut m = HashMap::new();
 
         m.insert("FEATURE", Keyword::Structural);
@@ -100,7 +100,7 @@ impl Lexer {
         m
     }
 
-    fn read_identifier(&mut self) -> String {
+    pub fn read_identifier(&mut self) -> String {
         let start = self.position;
         while self.position < self.input.len()
             && (self.input[self.position].is_alphanumeric() || self.input[self.position] == '_')
@@ -110,7 +110,7 @@ impl Lexer {
         self.input[start..self.position].iter().collect()
     }
 
-    fn read_number(&mut self) -> Result<i64, String> {
+    pub fn read_number(&mut self) -> Result<i64, String> {
         let start = self.position;
         while self.position < self.input.len() && self.input[self.position].is_ascii_digit() {
             self.position += 1;
@@ -119,7 +119,7 @@ impl Lexer {
         s.parse::<i64>().map_err(|_| format!("Invalid integer: {}", s))
     }
 
-    fn read_float(&mut self, int_part: i64) -> Result<f64, String> {
+    pub fn read_float(&mut self, int_part: i64) -> Result<f64, String> {
         self.position += 1;
         let start = self.position;
         while self.position < self.input.len() && self.input[self.position].is_ascii_digit() {
@@ -130,7 +130,7 @@ impl Lexer {
         combined.parse::<f64>().map_err(|_| format!("Invalid float: {}", combined))
     }
 
-    fn read_duration_or_number(&mut self) -> TokenType {
+    pub fn read_duration_or_number(&mut self) -> TokenType {
         let number = match self.read_number() {
             Ok(n) => n,
             Err(e) => return TokenType::Error(e),
@@ -174,9 +174,9 @@ impl Lexer {
         TokenType::Integer(number)
     }
 
-    fn read_comparison_operator(&mut self) -> String {
+    pub fn read_comparison_operator(&mut self) -> String {
         let first = self.input[self.position];
-        let mut op = first.to_string();
+        let op = first.to_string();
 
         if self.position + 1 < self.input.len() {
             let second = self.input[self.position + 1];
@@ -194,7 +194,7 @@ impl Lexer {
         op
     }
 
-    fn lookup_keyword(&self, identifier: &str) -> TokenType {
+    pub fn lookup_keyword(&self, identifier: &str) -> TokenType {
         let upper = identifier.to_uppercase();
         if let Some(k) = self.keyword_map.get(upper.as_str()) {
             TokenType::Keyword(k.clone())
@@ -203,7 +203,9 @@ impl Lexer {
         }
     }
 
-    fn tokenize(&mut self) -> Vec<Token> {
+    pub fn check_separator(&self, c: char) 
+
+    pub fn tokenize(&mut self) -> Vec<Token> {
         let mut tokens = Vec::new();
 
         while self.position < self.input.len() {
