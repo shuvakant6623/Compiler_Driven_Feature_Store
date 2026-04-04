@@ -8,6 +8,7 @@ pub struct Token {
 }
 
 #[derive(Clone, Debug)]
+#[allow(dead_code)]
 pub enum TokenType {
     Keyword(Keyword),
     Duration(i64, TimeUnit),
@@ -203,8 +204,6 @@ impl Lexer {
         }
     }
 
-    pub fn check_separator(&self, c: char) 
-
     pub fn tokenize(&mut self) -> Vec<Token> {
         let mut tokens = Vec::new();
 
@@ -245,6 +244,34 @@ impl Lexer {
                     value: op,
                     line: self.line,
                 });
+            } else if matches! (c, ',' | ':') {
+                tokens.push(Token {
+                    token_type: TokenType::Separator(c),
+                    value: c.to_string(),
+                    line: self.line,
+                });
+                self.position += 1;
+            } else if matches!(c, '+' | '-' | '*' | '/') {
+                tokens.push(Token {
+                    token_type: TokenType::MathOperator(c),
+                    value: c.to_string(),
+                    line: self.line,
+                });
+                self.position += 1;
+            } else if c == '(' {
+                tokens.push(Token {
+                    token_type: TokenType::LParen(c),
+                    value: c.to_string(),
+                    line: self.line,
+                });
+                self.position += 1;
+            } else if c == ')' {
+                tokens.push(Token {
+                    token_type: TokenType::RParen(c),
+                    value: c.to_string(),
+                    line: self.line,
+                });
+                self.position += 1;
             } else {
                 tokens.push(Token {
                     token_type: TokenType::Error(format!("Unexpected character: {}", c)),
