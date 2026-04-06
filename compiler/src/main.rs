@@ -1,5 +1,6 @@
 mod lexer;
-use lexer::{Lexer, Token};
+mod parser;
+use lexer::Lexer;
 
 fn main() {
     let input = String::from(
