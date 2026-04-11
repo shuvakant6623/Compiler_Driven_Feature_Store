@@ -16,17 +16,30 @@ struct Feature {
 }
 
 struct Window {
-    duration: Option<i64, TimeUnit>,
+    duration: Option<(i64, TimeUnit)>,
 }
 
 struct Aggregation {
-    function: keyword::Aggregation,
+    function: Keyword,
 }
 
 struct Filter {
-    expression: {
-        left: Identifier(String),
-        operator: ComparisonOperator(String),
-        right: Value(String),
-    },
+    expression: Expression,
 }
+
+enum Value {
+    Integer(i64),
+    Float(f64),
+    Text(String),
+    Identifier(String),
+}
+
+struct Expression {
+    left: Identifier,
+    operator: ComparisonOperator,
+    right: Value,
+}
+
+struct Identifier(String);
+struct ComparisonOperator(String);
+
