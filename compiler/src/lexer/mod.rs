@@ -1,13 +1,14 @@
 use std::collections::HashMap;
+use ordered_float::OrderedFloat;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Token {
-    token_type: TokenType,
-    value: String,
-    line: usize,
+    pub token_type: TokenType,
+    pub value: String,
+    pub line: usize,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[allow(dead_code)]
 pub enum TokenType {
     Keyword(Keyword),
@@ -19,12 +20,12 @@ pub enum TokenType {
     Separator(char),
     LParen(char),
     RParen(char),
-    Float(f64),
+    Float(OrderedFloat<f64>),
     Error(String),
     EOF,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum Keyword {
     Structural,
     Property,
@@ -32,7 +33,7 @@ pub enum Keyword {
     Connector,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub enum TimeUnit {
     Milliseconds,
     Seconds,
@@ -140,7 +141,7 @@ impl Lexer {
         if self.position < self.input.len() {
             if self.input[self.position] == '.' {
                 return match self.read_float(number) {
-                    Ok(f) => TokenType::Float(f),
+                    Ok(f) => TokenType::Float(ordered_float::OrderedFloat(f)),
                     Err(e) => TokenType::Error(e),
                 };
             }
