@@ -1,7 +1,7 @@
 mod lexer;
 mod parser;
 
-use lexer::Lexer;
+use crate::lexer::lexer::Lexer;
 use parser::Parser;
 
 fn main() {
