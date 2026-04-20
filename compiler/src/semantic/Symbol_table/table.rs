@@ -9,7 +9,7 @@ pub struct SymbolTable {
 impl SymbolTable {
     pub fn new() -> Self {
         SymbolTable {
-            scopes: vec![Scope::new()], // Start with a global scope
+            scopes: vec![Scope::new()], 
         }
     }
 
