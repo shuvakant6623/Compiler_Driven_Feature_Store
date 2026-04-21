@@ -1,9 +1,10 @@
 use crate::semantic::symbol_table::{SymbolTable, Symbol, SymbolKind, Type};
 use crate::semantic::errors::SemanticError;
+use crate::parser::ast::Identifier;
 
 pub struct Analyzer {
-    symbol_table: SymbolTable,
-    errors: Vec<SemanticError>,
+    pub symbol_table: SymbolTable,
+    pub errors: Vec<SemanticError>,
 }
 
 impl Analyzer {
@@ -24,41 +25,36 @@ impl Analyzer {
             let symbol = Symbol {
                 name: name.to_string(),
                 kind: SymbolKind::Variable,
-                var_type,
+                ty: var_type,
             };
             self.symbol_table.insert(symbol);
         }
     }
 
-    pub fn get_variable_type(&mut self, name: &str) -> Type {
-        if let Some(symbol) = self.symbol_table.lookup(name) {
-            if let SymbolKind::Variable = symbol.kind {
-                return symbol.var_type.clone();
-            } else {
-                self.errors.push(SemanticError::new(&format!(
-                    "'{}' is not a variable",
-                    name
-                )));
+    pub fn get_variable_type(&mut self, ident: &Identifier) -> Type {
+        let name = &ident.0;
+
+        match self.symbol_table.lookup(name) {
+            Some(sym) => sym.ty.clone(),
+            None => {
+                self.errors.push(
+                    SemanticError::new(&format!("Variable '{}' not declared", name))
+                );
+                Type::Unknown
             }
-        } else {
-            self.errors.push(SemanticError::new(&format!(
-                "Variable '{}' is not declared",
-                name
-            )));
         }
-        Type::Unknown
     }
 
-    pub fn check_binary(&mut self, left: &str, right: &str) -> Type {
-        let left_type = self.get_variable_type(left);
-        let right_type = self.get_variable_type(right);
+    pub fn check_binary(&mut self, left: &Identifier, right: &Identifier) -> Type {
+        let left_type = self.get_variable_type(&left.0);
+        let right_type = self.get_variable_type(&right.0);
 
         if left_type == right_type {
             left_type
         } else {
             self.errors.push(SemanticError::new(&format!(
                 "Type mismatch: '{}' is {:?} but '{}' is {:?}",
-                left, left_type, right, right_type
+                left.0, left_type, right.0, right_type
             )));
             Type::Unknown
         }

@@ -24,6 +24,7 @@ pub struct Filter {
     pub expression: Expression,
 }
 
+#[derive(Debug)]
 pub enum Value {
     Integer(i64),
     Float(f64),
