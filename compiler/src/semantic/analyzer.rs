@@ -31,9 +31,7 @@ impl Analyzer {
         }
     }
 
-    pub fn get_variable_type(&mut self, ident: &Identifier) -> Type {
-        let name = &ident.0;
-
+    pub fn get_variable_type(&mut self, name: &str) -> Type {
         match self.symbol_table.lookup(name) {
             Some(sym) => sym.ty.clone(),
             None => {

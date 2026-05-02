@@ -85,7 +85,7 @@ fn main() {
                     if let Some(filter) = &feature.filter {
                         let left = &filter.expression.left;   // String
                         let right = &filter.expression.right;
-                        let left_ty = analyzer.get_variable_type(left);
+                        let left_ty = analyzer.get_variable_type(&left.0);
 
                         let right_ty = match right {
                             Value::Integer(_) => Type::Int,
@@ -98,7 +98,7 @@ fn main() {
                             analyzer.errors.push(SemanticError::new(
                                 &format!(
                                     "Type mismatch: {:?} vs {:?} in '{} op {:?}'",
-                                    left_ty, right_ty, left, right
+                                    left_ty, right_ty, left.0, right
                                 ),
                             ));
                         }
