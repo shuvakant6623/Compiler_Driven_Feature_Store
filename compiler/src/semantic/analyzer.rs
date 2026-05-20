@@ -1,4 +1,5 @@
-use crate::semantic::symbol_table::{SymbolTable, Symbol, SymbolKind, Type};
+use crate::semantic::symbol_table::table::{SymbolTable};
+use crate::semantic::symbol_table::symbol::{Symbol, SymbolKind, Type};
 use crate::semantic::errors::SemanticError;
 use crate::parser::ast::Identifier;
 
