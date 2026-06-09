@@ -39,7 +39,7 @@ pub struct Expression {
 }
 
 pub struct Identifier(pub String);
-    pub struct ComparisonOperator(pub String);
+pub struct ComparisonOperator(pub String);
 
 #[derive(Debug)]
 pub enum AggregationFunc {
@@ -48,4 +48,24 @@ pub enum AggregationFunc {
     Min,
     Max,
     Count,
+}
+
+#[derive(Debug)]
+pub enum Expr {
+    Value(Value),
+
+    Binary {
+        left: Box<Expr>,
+        operator: String,
+        right: Box<Expr>,
+    },
+}
+
+#[derive(Debug)]
+pub enum Stmt {
+    Let(String, Expr),
+
+    Assign(String, Expr),
+
+    ExprStmt(Expr),
 }
