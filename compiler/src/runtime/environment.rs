@@ -18,7 +18,9 @@ impl Environment {
     }
 
     pub fn exit_scope(&mut self) {
-        self.scopes.pop();
+        if self.scopes.len() > 1 {
+            self.scopes.pop();
+        }
     }
 
     pub fn set(&mut self, name: String, value: Value) {
@@ -38,12 +40,12 @@ impl Environment {
 
     pub fn assign(&mut self, name: &str, value: Value) -> Result<(), RuntimeError> {
         for scope in self.scopes.iter_mut().rev() {
-            if scope.contains_key(name) {
-                scope.insert(name.to_string(), value);
+            if let Some(slot) = scope.get_mut(name) {
+                *slot = value;
                 return Ok(());
             }
         }
 
-        Err(RuntimeError::UndefinedVariable(name.to_string()))
+        Err(RuntimeError::InvalidAssignment(name.to_string()))
     }
 }

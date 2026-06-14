@@ -1,7 +1,8 @@
-use crate::runtime::value::Value;
 use crate::runtime::environment::Environment;
+use crate::runtime::value::Value;
 use crate::runtime::error::RuntimeError;
-use crate::parser::ast::{Value as AstValue, Stmt};
+
+use crate::parser::ast::{Expr, Stmt};
 
 pub struct Evaluator {
     pub env: Environment,
@@ -14,91 +15,119 @@ impl Evaluator {
         }
     }
 
-    pub fn eval_value(&mut self, value: &AstValue) -> Result<Value, RuntimeError> {
+    pub fn eval_value(&mut self, value: &crate::parser::ast::Value) -> Result<Value, RuntimeError> {
         match value {
-            AstValue::Integer(i) => Ok(Value::Int(*i)),
-
-            AstValue::Float(_) => Err(RuntimeError::TypeMismatch(
-                "Float not supported yet".to_string(),
-            )),
-
-            AstValue::Text(s) => Ok(Value::String(s.clone())),
-
-            AstValue::Identifier(name) => {
-                self.env
-                    .get(name)
-                    .cloned()
-                    .ok_or(RuntimeError::UndefinedVariable(name.clone()))
-            }
-        }
-    }
-
-    pub fn eval_binary(
-        &mut self,
-        left: Value,
-        op: &str,
-        right: Value,
-    ) -> Result<Value, RuntimeError> {
-        match (left, right) {
-            (Value::Int(a), Value::Int(b)) => match op {
-                "+" => Ok(Value::Int(a + b)),
-                "-" => Ok(Value::Int(a - b)),
-                "*" => Ok(Value::Int(a * b)),
-                "/" => {
-                    if b == 0 {
-                        Err(RuntimeError::DivisionByZero)
-                    } else {
-                        Ok(Value::Int(a / b))
-                    }
+            crate::parser::ast::Value::Integer(i) => Ok(Value::Int(*i)),
+            crate::parser::ast::Value::Float(f) => Ok(Value::Float(*f)),
+            crate::parser::ast::Value::Text(s) => Ok(Value::String(s.clone())),
+            crate::parser::ast::Value::Identifier(name) => {
+                match self.env.get(name) {
+                    Some(v) => Ok(v.clone()),
+                    None => Err(RuntimeError::UndefinedVariable(name.clone())),
                 }
-                "==" => Ok(Value::Bool(a == b)),
-                "!=" => Ok(Value::Bool(a != b)),
-                ">" => Ok(Value::Bool(a > b)),
-                "<" => Ok(Value::Bool(a < b)),
-
-                _ => Err(RuntimeError::TypeMismatch(format!(
-                    "Unsupported operator '{}'",
-                    op
-                ))),
-            },
-
-            (Value::String(a), Value::String(b)) => match op {
-                "==" => Ok(Value::Bool(a == b)),
-                "!=" => Ok(Value::Bool(a != b)),
-
-                _ => Err(RuntimeError::TypeMismatch(format!(
-                    "Invalid string operation '{}'",
-                    op
-                ))),
-            },
-
-            _ => Err(RuntimeError::TypeMismatch(
-                "Mismatched types in binary operation".to_string(),
-            )),
+            }
         }
     }
 
-    pub fn eval_stmt(&mut self, stmt: Stmt) -> Result<(), RuntimeError> {
+    pub fn eval_binary(&self, left: Value, op: &str, right: Value) -> Result<Value, RuntimeError> {
+        match op {
+            "+" => match (left, right) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a + b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a + b)),
+                (Value::Int(a), Value::Float(b)) => Ok(Value::Float(a as f64 + b)),
+                (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a + b as f64)),
+                _ => Err(RuntimeError::TypeMismatch("Invalid types for +".to_string())),
+            },
+
+            "-" => match (left, right) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a - b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a - b)),
+                (Value::Int(a), Value::Float(b)) => Ok(Value::Float(a as f64 - b)),
+                (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a - b as f64)),
+                _ => Err(RuntimeError::TypeMismatch("Invalid types for -".to_string())),
+            },
+
+            "*" => match (left, right) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a * b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a * b)),
+                (Value::Int(a), Value::Float(b)) => Ok(Value::Float(a as f64 * b)),
+                (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a * b as f64)),
+                _ => Err(RuntimeError::TypeMismatch("Invalid types for *".to_string())),
+            },
+
+            "/" => match (left, right) {
+                (Value::Int(_), Value::Int(0)) => Err(RuntimeError::DivisionByZero),
+                (Value::Float(_), Value::Float(b)) if b == 0.0 => Err(RuntimeError::DivisionByZero),
+
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Int(a / b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Float(a / b)),
+                (Value::Int(a), Value::Float(b)) => Ok(Value::Float(a as f64 / b)),
+                (Value::Float(a), Value::Int(b)) => Ok(Value::Float(a / b as f64)),
+
+                _ => Err(RuntimeError::TypeMismatch("Invalid types for /".to_string())),
+            },
+
+            "==" => Ok(Value::Bool(left == right)),
+            "!=" => Ok(Value::Bool(left != right)),
+
+            ">" => match (left, right) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a > b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Bool(a > b)),
+                (Value::Int(a), Value::Float(b)) => Ok(Value::Bool((a as f64) > b)),
+                (Value::Float(a), Value::Int(b)) => Ok(Value::Bool(a > b as f64)),
+                _ => Err(RuntimeError::TypeMismatch("Invalid types for >".to_string())),
+            },
+
+            "<" => match (left, right) {
+                (Value::Int(a), Value::Int(b)) => Ok(Value::Bool(a < b)),
+                (Value::Float(a), Value::Float(b)) => Ok(Value::Bool(a < b)),
+                (Value::Int(a), Value::Float(b)) => Ok(Value::Bool((a as f64) < b)),
+                (Value::Float(a), Value::Int(b)) => Ok(Value::Bool(a < b as f64)),
+                _ => Err(RuntimeError::TypeMismatch("Invalid types for <".to_string())),
+            },
+
+            _ => Err(RuntimeError::TypeMismatch(format!("Unknown operator {}", op))),
+        }
+    }
+
+    pub fn eval_expr(&mut self, expr: &Expr) -> Result<Value, RuntimeError> {
+        match expr {
+            Expr::Value(v) => self.eval_value(v),
+
+            Expr::Binary { left, operator, right } => {
+                let left_val = self.eval_expr(left)?;
+                let right_val = self.eval_expr(right)?;
+                self.eval_binary(left_val, operator, right_val)
+            }
+        }
+    }
+
+    pub fn eval_stmt(&mut self, stmt: &Stmt) -> Result<(), RuntimeError> {
         match stmt {
-            // let x = value;
             Stmt::Let(name, expr) => {
-                let value = self.eval_value(&expr)?;
-                self.env.set(name, value);   
+
+                let value = self.eval_expr(expr)?;
+                self.env.set(name.clone(), value);
                 Ok(())
             }
 
-            // x = value;
             Stmt::Assign(name, expr) => {
-                let value = self.eval_value(&expr)?;
-                self.env.assign(name, value)?; 
+                let value = self.eval_expr(expr)?;
+                self.env.assign(name, value)?;
                 Ok(())
             }
 
-            // expression statement (like: x + 5)
-            Stmt::Expr(expr) => {
-                self.eval_value(&expr)?;  // just evaluate
+            Stmt::ExprStmt(expr) => {
+                self.eval_expr(expr)?;
                 Ok(())
             }
         }
+    }
+
+    pub fn eval_program(&mut self, stmts: &[Stmt]) -> Result<(), RuntimeError> {
+        for stmt in stmts {
+            self.eval_stmt(stmt)?;
+        }
+        Ok(())
     }
 }
